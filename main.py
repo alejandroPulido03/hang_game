@@ -7,7 +7,7 @@ import media
 class GameState:
     def __init__(self):
         self.points = 0
-        self.lifes = 3
+        self.lifes = 10
         self._word = ''
     
     @property
@@ -30,12 +30,13 @@ class GameState:
             self.newWord()
             RandWord = Word(self.getWord)
             match = Match(RandWord)
-            match.newHangGame(self.lifes)
+            match.newHangGame(self.lifes, self.points)
             self.lifes -=1
-        if self.points > 100:
-            print('You win')
+            self.points += match.matchPoints
+        if self.points > 50:
+            print(f'\n\n\n {media.YOUWIN} \n \t\t\t\t Points: {self.points}')
         else:
-            print('Game Over')
+            print(f'\n\n\n {media.YOULOSE} \n \t\t\t\t Points: {self.points}')
 
 
 
@@ -43,43 +44,57 @@ class Match:
     def __init__(self, Word):
         self.Word = Word
         self.board = ('_ ' * (self.Word.lenWord - 1))
+        self.matchPoints = 0
     
-    def newHangGame(self, lifes):
+    def newHangGame(self, lifes, points):
+
         Hangman = Man()
+
         while(Hangman.parts > 0):
-            print(f'Hangman parts: {Hangman.parts} \t \t \t Lifes: {lifes} ')
-            print(self.board)
+
+            print(f'🛡️: {Hangman.parts} \t \t \t ❤️: {lifes} \t \t \t 🪙: {points} \n\n')
+            print(f'\t \t \t' + self.board)
+            print(f'\n \n' + media.HANGMANPICS[Hangman.parts])
             if(self.board.replace(' ', '') == self.Word.word.replace('\n', '')):
-                print('You win')
+                print('\t\t\t\t You win')
                 break
-            userElection = input('Choose a letter and press enter: ')
+            userElection = input(f'\t\t Choose a letter and press enter: ')
             isAMatch = self.matchLetter(userElection)
             if isAMatch:
                 self.board = self.putBoard(userElection)
+
             else:
                 Hangman.parts -=1
 
             self.updatePoints(isAMatch)
             os.system('clear')
             
-        if Hangman.parts == 0: print(f'You lose, the word was {self.Word.word}')
+        if Hangman.parts == 0: 
+            print(f'\n \t \t You die, the word was {self.Word.word} \n  {media.YOUDIED}')
+
         try:
-            input('Enter to continue, Press control C to exit: ')
+            input('\t Enter to continue, Press control C to exit: ')
         except:
+            os.system('clear')
             exit()
         os.system('clear')
 
     def matchLetter(self, letter):
         return letter in self.Word.word
+    
+    def updatePoints(self, postvPoints):
+        if postvPoints:
+            from functools import reduce
+            numOfChanges = len(list(filter(lambda d: d.isalpha(), self.board)))
+            self.matchPoints += abs(numOfChanges - self.matchPoints)
+        else:
+            self.matchPoints = -1
+        
 
     def putBoard(self, letter):
         splitWrd = list(self.Word.word)
         splitBrd = self.board.split(' ')
         return ' '.join(list(map(lambda ltr, actual : f'{ltr}' if self.normalize(ltr) == letter and letter != actual else actual, splitWrd, splitBrd)))
-
-    def updatePoints(self, postvPoints):
-        #TODO: System of points
-        pass
 
     def normalize(self, ltr):
         accents = {
@@ -90,6 +105,10 @@ class Match:
             'ú' : 'u'
         }
         return accents.get(ltr) or ltr
+
+
+
+
 class Word:
     def __init__(self, word):
         self.word = word
@@ -100,10 +119,14 @@ class Man:
         self.parts = 6 
 
 def startInterface():
-    print(media.title)
+    os.system('clear')
+    print('\n\n\n\n')
+    print(media.TITLE)
+    print('\n \t\t\t\t  Coded with ❤️ by @diegop384')
     try:
-        input('Press enter to start, Press control C to exit: ')
+        input('\n \t\t\t Press enter to start, Press control C to exit: ')
     except:
+        os.system('clear')
         exit()
     
     os.system('clear')
